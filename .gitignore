@@ -4,3 +4,5 @@
 *.vdisk
 *.bin
 *.elf.o
+*.img
+
