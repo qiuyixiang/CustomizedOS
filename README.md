@@ -3,9 +3,11 @@
 #### 介绍
 OS Development Based on 30 Days OS Development
 
-基于《30 天自制操作系统 》, 实现简单OS
+基于《30 天自制操作系统 》, 《x86 汇编语言》,  《操作系统真相还原》 实现简单OS
 
 
+
+API  调用约定详见手册
 
 更多信息参阅手册  - Manual 
 

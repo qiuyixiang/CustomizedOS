@@ -5,4 +5,5 @@
 *.bin
 *.elf.o
 *.img
+*.ini
 
