@@ -1,29 +1,45 @@
-# OS
+# OS Dev
 
 #### 介绍
 OS Development Based on 30 Days OS Development
 
+基于《30 天自制操作系统 》, 实现简单OS
+
+
+
+更多信息参阅手册  - Manual 
+
 #### 软件架构
-软件架构说明
+- 硬件架构 ： 			
 
+  - 8086 Real Mod  		
+  - i386   Architecture
 
-#### 安装教程
+- 软件架构：
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+  -  C
+
+  - X86 Assembly   Based on NASM
+
+     
+
+- 
+  #### 安装教程
+
+  - ​						开发环境基于 Windows11  
+  - ​			            交叉编译套件  GCC _elf_i386
+
+  - ​			            Makefile
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+​		
 
 #### 参与贡献
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+​		@QIUYIXIANG
 
+​		起始日期 ： 2023-04-17
+
+​		结束日期：
 
