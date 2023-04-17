@@ -1,0 +1,6 @@
+/git ignore File There ! /
+
+*.o
+*.vdisk
+*.bin
+*.elf.o
