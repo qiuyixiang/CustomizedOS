@@ -9,7 +9,9 @@ OS Development Based on 30 Days OS Development
 
 API  调用约定详见手册
 
-更多信息参阅手册  - Manual 
+更多信息参阅手册  - Manual   
+
+详见  [Customed OS: Customed OS Development (gitee.com)](https://gitee.com/qiuyixiang/CustomedOS/blob/master/Manual.md)（Typera）
 
 #### 软件架构
 - 硬件架构 ： 			
