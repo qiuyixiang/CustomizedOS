@@ -20,7 +20,7 @@ qOS  1.0.0    手册指南   (建议使用 typero 打开.md 文件)
 
 
 
-#### 说明：
+**说明：**
 
 - ​	基于《30 天自制操作系统 》, 《x86 汇编语言》,  《操作系统真相还原》进行开发 
 - ​	替换本书中的编译套件 改用 gcc 交叉编译工具  
@@ -35,7 +35,7 @@ qOS  1.0.0    手册指南   (建议使用 typero 打开.md 文件)
 
 ## 环境搭建
 
-​		gcc  :     交叉编译工具
+​		**gcc  :     交叉编译工具**
 
 ​			![image-20230417170833819](C:\Users\11508\AppData\Roaming\Typora\typora-user-images\image-20230417170833819.png)
 
@@ -43,7 +43,7 @@ qOS  1.0.0    手册指南   (建议使用 typero 打开.md 文件)
 
 
 
-Bochs  配置文件
+**Bochs  配置文件**
 
 - [ ]  	运行 bochs虚拟机 ：
 
@@ -64,7 +64,7 @@ Bochs  配置文件
 
   
 
-Diskpart ：
+**Diskpart ：**
 
 ```cmd
 create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 type=fixed
@@ -76,7 +76,7 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 
 
 
-*实模式内存布局*
+***实模式内存布局***
 
 | 起始    | 结束    | 大小       |                             用途                             |
 | ------- | ------- | ---------- | :----------------------------------------------------------: |
@@ -88,9 +88,82 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 | `B0000` | `B7FFF` | `32KB`     |                        黑白显示适配器                        |
 | `A0000` | `AFFFF` | `64KB`     |                        彩色显示适配器                        |
 | `9FC00` | `9F000` | `1KB`      |       `EBDA(Extended BIOS Data Area)` 扩展`BIOS`数据区       |
-| `7E00`  | `9FBFF` | `≈608KB`   |                           可区域用                           |
-| `7C00`  | `7DFF`  | `512B`     |                    `MBR`被`BIOS`加载区域                     |
-| `500`   | `7BFF`  | `≈30KB`    |                           可区域用                           |
-| `400`   | `4FF`   | `256B`     |                       `BIOS Data Area`                       |
-| `000`   | `3FF`   | `1KB`      |             `Interrupt Vector Table` 中断向量表              |
+| `07E00` | `9FBFF` | `≈608KB`   |                 可区域用（程序默认堆栈空间）                 |
+| `07C00` | `07DFF` | `512B`     |                    `MBR`被`BIOS`加载区域                     |
+| `00500` | `07BFF` | `≈30KB`    |                           可区域用                           |
+| `00400` | `004FF` | `256B`     |                       `BIOS Data Area`                       |
+| `00000` | `003FF` | `1KB`      |             `Interrupt Vector Table` 中断向量表              |
 
+
+
+实模式地址BIOS初始化
+
+
+
+#### 	**qOS1.0.0 函数调用约定**
+
+
+
+- 标准阅读 ： cdecl 调用约定
+
+- 入栈方式 ：从右往左
+
+  ```c
+  # c function declare !
+  # 从右往左进行传参
+  # _r 先入栈  _l 后入栈
+  
+  int _call(int _l int _r);
+  
+  ```
+
+​				
+
+- 平栈方式 ： 外平栈  （恢复栈帧）
+
+  
+
+  **！确保函数调用前后堆栈指针 esp， ebp 值与之前相同**
+
+  ```c++
+  int _call (int _l int _r);
+  # 	_call(10, 20)
+  ```
+
+  ```assembly
+  PUSH 20
+  PUSH 10
+  # PUSH address
+  
+  CALL _add
+  ADD ESP, 8
+  
+  _add:
+  		; Allocate Stack Memory
+  		PUSH EBP
+  		MOV EBP, ESP
+  		
+  		...
+  		
+  		MOV ESP, EBP
+  		POP EBP
+  		RET
+  ```
+
+  ​								
+
+​	
+
+## 保护模式
+
+
+
+​	**脱离实模式（8086）后将无法使用BIOS提供的中断**
+
+​	
+
+
+
+
+
+## 底层硬件IO操作 
