@@ -6,6 +6,10 @@ OS
 
 
 
+**qOS  1.0.0** 
+
+
+
 OS Dev Based on 30 Days OS !
 
 qOS  1.0.0    手册指南   (建议使用 typero 打开.md 文件)
@@ -96,11 +100,30 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 
 
 
-实模式地址BIOS初始化
+实模式地址BIOS初始化 可以地址为 1M
 
 
 
-#### 	**qOS1.0.0 函数调用约定**
+#### 实模式内存分配
+
+
+
+- bootloader  0 磁道 0 面 1 扇区	大小：1扇区	装载到 0X07C00 物理地址
+- setup            0 磁道 0 面 2 扇区    大小：2扇区   装载到  0X00500 物理地址
+
+
+
+**setup 负责读取 kernel 内核至内存区， 并进入保护模式设置GDT， LDT， IDT**
+
+
+
+#### BIOS 中断例程 
+
+
+
+
+
+#### 	**qOS1.0.0 底层函数调用约定**
 
 
 
@@ -162,8 +185,21 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 
 ​	
 
+##### 	进入保护模式
+
 
 
 
 
 ## 底层硬件IO操作 
+
+脱离实模式（8086）后将无法使用BIOS提供的中断
+
+即直接通过 in ，out指令访问底层硬件驱动
+
+​		
+
+#### LAB 28  方式读取磁盘
+
+
+
