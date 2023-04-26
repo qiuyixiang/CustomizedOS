@@ -76,6 +76,108 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 
 
 
+ **nasm伪指令解析** ：
+
+```assembly
+Message ：db "Hello OS World !", 0x00
+Line_OF_MESSAGE : db $ - Message
+
+# 如直接访问 Message ， 返回的为 ‘H’ 在程序段中的偏移地址 ！
+# 若想访问存在地址中的值则需要 [Line_OF_MESSAGE]
+```
+
+
+
+Makefile 模板  Version 3.0
+
+```makefile
+# MakeFile Project Script
+# Manage file Complie And Assemble !
+# Create on 2023-04-17
+# Has Linked To Git Remote Storage !!!
+# Author : @qiuyixiang -user
+
+##### Main Path
+
+FLOPPY_DISK_PATH 		=			./VDisk/test.img
+HARD_DISK_PATH			=			./VDisk/vdisk.vhd
+DISK_PATH				=			$(HARD_DISK_PATH)
+
+CONFIG_PATH			    =			./config/
+BIN_PATH			    =			./bin/
+LIB_PATH			    =			$(BIN_PATH)lib/
+BOOT_PATH			    =			./boot/
+KERNEL_PATH				=	        ./kernel/
+					
+##### Tool Chain
+
+nasm				 =			nasm.exe
+make				 =			make.exe
+dd					 =			dd.exe
+gcc					 =			x86_64-elf-gcc.exe
+objcopy				 =			x86_64-elf-objcopy.exe
+objdump			     =			x86_64-elf-objdump.exe
+g++					 =			x86_64-elf-g++.exe
+ld 				 	 =			x86_64-elf-ld.exe
+bochs				 =			D:\Application\Bochs\Bochs-2.7\bochsdbg.exe
+##### Create File
+
+# bootloader
+bootloader.bin :  $(BOOT_PATH)bootloader.asm MakeFile
+		$(nasm) $(BOOT_PATH)bootloader.asm -o $(BIN_PATH)bootloader.bin
+	
+# setup 
+setup.bin : $(BOOT_PATH)setup.asm MakeFile
+		$(nasm) $(BOOT_PATH)setup.asm -o $(BIN_PATH)setup.bin
+
+#kernel 
+KERNEL_DEPENDENCE = $(KERNEL_PATH)kernel.c $(KERNEL_PATH)kernel.asm $(BIN_PATH)lib/kernelc.o $(BIN_PATH)lib/kernelsm.o \
+					$(BIN_PATH)kernel.elf.o
+
+kernelc.o : $(KERNEL_PATH)kernel.c  MakeFile
+		$(gcc) -m16 -c $(KERNEL_PATH)kernel.c -o $(BIN_PATH)lib/kernelc.o
+
+kernelsm.o : $(KERNEL_PATH)kernel.asm MakeFile
+		$(nasm) -f elf32 $(KERNEL_PATH)kernel.asm -o $(BIN_PATH)lib/kernelsm.o
+
+kernel.elf.o :$(BIN_PATH)lib/kernelc.o $(BIN_PATH)lib/kernelsm.o  MakeFile
+		$(ld) -m elf_i386 -s $(BIN_PATH)lib/kernelsm.o $(BIN_PATH)lib/kernelc.o -o $(BIN_PATH)kernel.elf.o
+
+kernel.bin : $(BIN_PATH)kernel.elf.o MakeFile
+		$(objcopy) -O binary $(BIN_PATH)kernel.elf.o kernel.bin
+
+kernel :  $(KERNEL_DEPENDENCE)
+		$(make) kernelc.o 
+		$(make) kernelsm.o  
+		$(make) kernel.elf.o  
+		$(make) kernel.bin  
+create :
+		$(make) bootloader.bin
+		$(make) setup.bin
+		$(make) kernel
+		
+##### Write To Disk
+write :
+# bootloader
+		$(dd) if=$(BIN_PATH)bootloader.bin of=$(DISK_PATH) bs=512 count=1 
+# setup
+		$(dd) if=$(BIN_PATH)setup.bin of=$(DISK_PATH) bs=512 count=2 seek=1		
+# kernel 
+		$(dd) if=./kernel.bin of=$(DISK_PATH) bs=512 count=2 seek=3
+
+#### Run Application
+run :
+# Create 
+	$(make) create
+# Write 
+	$(make) write
+# install
+	$(bochs) -q -f  $(CONFIG_PATH)bochsrc.bxrc
+
+```
+
+
+
 ##  实模式
 
 
@@ -117,9 +219,143 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 
 
 
+
+
 #### BIOS 中断例程 
 
+​													**----中断向量表**
 
+
+
+![image-20230421180314625](C:\Users\11508\AppData\Roaming\Typora\typora-user-images\image-20230421180314625.png)
+
+
+
+![image-20230421180403931](C:\Users\11508\AppData\Roaming\Typora\typora-user-images\image-20230421180403931.png)
+
+
+
+​		
+
+**清屏 **
+
+**中断 int 10h，AH = 06H / 07H**
+
+| 寄存器 | 说明                             | 值                            |
+| ------ | -------------------------------- | ----------------------------- |
+| AH     | 功能编码                         | 向上滚屏：06H，向下滚屏 : 07H |
+| BH     | 空白区域的缺省属性               |                               |
+| AL     | 滚动行数                         | 0：清窗口                     |
+| CH、CL | 滚动区域左上角位置：Y坐标，X坐标 | 行， 列                       |
+| DH、DL | 滚动区域右下角位置：Y坐标，X坐标 | 行， 列                       |
+
+
+
+**设置光标**
+
+**中断 int 10h， AH=2**
+
+| 寄存器 |  说明  | 值   |
+| ------ | :----: | ---- |
+| BH     | 第几页 |      |
+| DH     |  行号  |      |
+| DL     |  列号  |      |
+
+
+
+**读磁盘**
+
+**中断 int 13h**
+
+```assembly
+        # ES：BX 指向读入内存地址
+        # AH  选择子程序  0x02 读磁盘  0x03 写磁盘
+        # CH  读取柱面号
+        # DH  读取磁头号
+        # CL  读取扇区号
+        # DL  驱动器号（硬盘从0x80开始,软盘从0x00开始）
+        
+        MOV AX, SETUP_BASE_ADDRESS
+        SHR AX, 0X04
+        MOV ES, AX
+        MOV BX, 0X0000 
+
+        MOV AH, 0X02            ; 0X02 Read Disk, 0X03 Write Disk
+        MOV AL, 0X02                ; 读取扇区数
+                    
+        MOV CH, 0X00                ; 读取柱面号
+        MOV DH, 0X00                ; 读取磁头号
+        MOV CL, 0X02                ; 读取扇区号
+        MOV DL, 0X80                ; 驱动器号（硬盘从0x80开始,软盘从0x00开始）
+        
+```
+
+
+
+#### 实模式程序
+
+
+
+​	**Bootloader早期版本**
+
+```assembly
+;BootLoader MBR File 
+;载入 0 面 0 磁道 1 扇区到 0x7c00 位置
+;Loader Address 0x7c00
+
+;MBR For The Next File
+
+
+;Initialization The Segment Register ! 
+
+[ORG 0X7C00]
+[SECTION .text]
+[BITS 16]
+
+MOV AX, CS
+MOV DS, AX
+MOV ES, AX
+MOV SS, AX
+MOV GS, AX
+MOV FS, AX
+
+XCHG BX, BX
+;Call Test Func
+CALL print
+
+;Endless Loop
+JMP $
+
+;Test func
+print :
+        MOV AX, 0XB800
+        MOV ES, AX
+        MOV AX, 0X0000
+        MOV DS, AX
+
+        MOV DI, 0X0000
+        MOV SI, Message
+        
+        _try:
+                MOV AL, [DS : SI]
+                CMP AL, 0X00
+                JE _end
+                MOV [ES : DI], AL
+                INC DI
+                MOV BYTE [ES : DI], 00000111B
+                INC DI
+                INC SI
+                JMP _try
+        _end:
+                RET 
+
+
+Message: DB "Hello OS WORLD !", 0x00
+
+;Fill The Rest Of Memory ! 
+TIMES 510 - ($ - $$) DB 0X00
+DW 0XAA55
+```
 
 
 
@@ -170,12 +406,11 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
   		
   		MOV ESP, EBP
   		POP EBP
-  		RET
+  		RET					
   ```
 
-  ​								
 
-​	
+## 
 
 ## 保护模式
 
@@ -184,6 +419,16 @@ create vdisk file=D:\Project\OS\Customed\30DaysOS\VDisk\vdisk.vhd maximum=10 typ
 ​	**脱离实模式（8086）后将无法使用BIOS提供的中断**
 
 ​	
+
+#### 全局描述符表GDT
+
+​		 全局描述符   大小为 8Byte
+
+​		
+
+​			![image-20230426145625741](C:\Users\11508\AppData\Roaming\Typora\typora-user-images\image-20230426145625741.png)
+
+
 
 ##### 	进入保护模式
 

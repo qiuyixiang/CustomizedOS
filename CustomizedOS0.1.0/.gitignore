@@ -2,8 +2,10 @@
 
 *.o
 *.vdisk
+*.vhd
 *.bin
 *.elf.o
 *.img
 *.ini
+*.exe
 
