@@ -13,7 +13,7 @@ floppy_bootsig_check: disabled=1
 floppya: type=1_44
 # no floppyb
 ata0: enabled=true, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=disk, path="D:\Project\OS\Customed\CustomizedOS0.1.0\VDisk\vdisk.vhd", mode=vpc, cylinders=0, heads=0, spt=0, sect_size=1024, model="Generic 1234", biosdetect=auto, translation=auto
+ata0-master: type=disk, path="D:\Project\OS\Customized\CustomizedOS0.1.0\VDisk\vdisk.vhd", mode=vpc, cylinders=0, heads=0, spt=0, sect_size=1024, model="Generic 1234", biosdetect=auto, translation=auto
 ata0-slave: type=none
 ata1: enabled=true, ioaddr1=0x170, ioaddr2=0x370, irq=15
 ata1-master: type=none
