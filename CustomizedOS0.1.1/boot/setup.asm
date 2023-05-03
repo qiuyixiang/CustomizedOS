@@ -12,25 +12,36 @@ SETUP_BASE_ADDRESS      EQU         0X8000
 KERNEL_BASE_ADDRESS     EQU         0X0000
 DESCRIPTOR_COUNT        EQU         0X03
 
-[ORG 0x0000]
 [SECTION .data]
 ; Declare For GDT 
 ; Global Descriptor Table
 
 _gdtr_48 :
-        DW 0XAAAA       ; limit : 256 byte  (the amount of descriptor is 32)
-        DD 0XAAAAAAAA         ; Base Address of GDT
+        DW 0X0100,                                 ; limit : 256 byte  (the amount of descriptor is 32)
+        DD _GDT + (SETUP_BASE_ADDRESS << 4)        ; Base Address of GDT
 
 Message : db "Hello World !"
 _GDT:
-        DW 0X00, 0X00, 0X00, 0X00
+        ; Index = 0 Just As a Flag (Unused Value)
+        DW 0X0000, 0X0000, 0X0000, 0X0000
 
-        ; Code Descriptor
-        DW 0X00, 0X00, 0X00, 0X00
-        ; Data Descriptor
-        DW 0X00, 0X00, 0X00, 0X00
+        ; System Code Descriptor
+        DW      0XFFFF           ; Segment Limit
+        DW      0X0000           ; Base Address
+        DB      0X00             ; Base Address
+        DB      1_00_1_1010B      ; P  DPL  S  Type 
+        DB      1_1_0_0_1111B     ; G  D/B  L  AVL Limit
+        DB      0X00             ; Base Address
 
-TIMES (32 - DESCRIPTOR_COUNT) DQ 0X0000      
+        ; System Data Descriptor
+        DW      0XFFFF          
+        DW      0X0000  
+        DB      0X00
+        DB      1_00_1_0010B
+        DB      1_1_0_0_1111B
+        DB      0X00
+
+TIMES (32 - DESCRIPTOR_COUNT) DQ 0X0000     
 
 ; GDTR (Global Descriptor Table Register)
 ; 48 bit register (point at GDT)
@@ -44,8 +55,27 @@ TIMES (32 - DESCRIPTOR_COUNT) DQ 0X0000
 MOV AX, 0X8000
 MOV DS, AX
 
+
+; Close Interrupt
+cli  
 ; 1. load _gdtr_48 (48 bits) to gdtr register
 XCHG BX, BX
-mov ax, [DS:_gdtr_48]
-LGDT [DS:_gdtr_48]
+LGDT [_gdtr_48]
 
+; 2. open A20 Main Thread 
+MOV DX, 0X92
+
+IN AL, DX
+OR AL, 00000010B
+OUT DX, AL
+
+; 3. Set CR0 First Bit to 1
+MOV EAX, CR0
+OR EAX, 0X01
+MOV CR0, EAX
+
+; JMPI 0X00 , 8
+; 0X00 :  Offset Address
+; 8 (0000 0000 0000 1000)  : Index of Selector = 1
+XCHG BX, BX
+JMP 0x0008:0x0000 

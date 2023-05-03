@@ -93,7 +93,7 @@ _read_ok:
         CALL _set_cursor
 
 ; Jump To SetUp's Memory Address 0x0800 : 0x0000  (0x80000)
-; XCHG BX, BX
+
 JMP SETUP_BASE_ADDRESS : 0x0000
 
 ;################# Set Cursor To Proper Place #################
