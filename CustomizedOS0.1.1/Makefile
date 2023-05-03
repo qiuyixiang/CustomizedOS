@@ -58,7 +58,7 @@ write :
 # bootloader 
 		$(dd) if=$(BIN_PATH)bootloader.bin of=$(DISK_PATH) bs=512 count=1 seek=0
 # setup
-		$(dd) if=$(BIN_PATH)setup.bin of=$(DISK_PATH) bs=512 count=2 seek=1
+		$(dd) if=$(BIN_PATH)setup.bin of=$(DISK_PATH) bs=512 count=4 seek=1
 
 
 ####################### Final Instruction #######################	

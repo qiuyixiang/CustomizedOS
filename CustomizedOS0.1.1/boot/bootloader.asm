@@ -12,7 +12,7 @@
 
 ; Some Base Address of Macro 
 BOOTLOADER_BASE_ADDRESS       EQU       0x7C00
-SETUP_BASE_ADDRESS            EQU       0x0500
+SETUP_BASE_ADDRESS            EQU       0x8000
       
 ; Main Procedure Start  !!!
 ; Initialized The Base Register
@@ -40,7 +40,6 @@ MOV SP, 0X7C00
 
 ; Show Booting Message !
         MOV SI, MESSAGE
-        XCHG BX, BX
         MOV CX, [LINE_OF_MESSAGE]
         
         MOV DI, 0X0000
@@ -56,12 +55,13 @@ MOV SP, 0X7C00
 ;# Read From Hard Disk 
 ; Use BISO (HLS) MODE READ from hard disk
 ; Set Memory Address
-        MOV AX, 0X0000
+; 8000:0000 
+        MOV AX, SETUP_BASE_ADDRESS
         MOV ES, AX
-        MOV BX, SETUP_BASE_ADDRESS
+        MOV BX, 0X0000
 
         MOV AH, 0X02
-        MOV AL, 0X02
+        MOV AL, 0X04
 
         MOV CL, 0X00
         MOV DH, 0X00
@@ -79,7 +79,7 @@ _read_error:
         INT 0X13
 
 _read_ok:
-        XCHG BX, BX
+;        XCHG BX, BX
         MOV SI, FINISH
         MOV CX, [LINE_OF_FINISH]
         MOV DI, 80 * 2 * 1
@@ -92,9 +92,9 @@ _read_ok:
         
         CALL _set_cursor
 
-; Jump To SetUp's Memory Address 0x0000 : 0X0500  (0x00500)
-XCHG BX, BX
-JMP SETUP_BASE_ADDRESS
+; Jump To SetUp's Memory Address 0x0800 : 0x0000  (0x80000)
+; XCHG BX, BX
+JMP SETUP_BASE_ADDRESS : 0x0000
 
 ;################# Set Cursor To Proper Place #################
 ; @ function setCursor
