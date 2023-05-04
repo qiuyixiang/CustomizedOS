@@ -602,9 +602,72 @@ GDTR寄存器长度为6字节（48位）所以说，GDT最多只能拥有8192个
 
 #### 	进入保护模式
 
+早期版本构造GDT表
+
+​		进入保护模式三大步
+
+```assembly
+; GDT (Global Descriptor Table)
+GDT_:
+; Index = 0 DUMMY
+        DW 0X0000 
+        DW 0X0000 
+        DW 0X0000
+        DW 0X0000
+
+; Code Segment
+        DW LIMIT_MAXIMUM
+        DW BASE_SEGMENT_ADDRESS
+
+        DB 0X00
+        DB 1_00_1_1010B
+        
+        DB 1_1_0_0_1111B
+        DB 0X00
+
+; Data Segment
+        DW LIMIT_MAXIMUM    
+        DW BASE_SEGMENT_ADDRESS
+
+        DB 0X00
+        DB 1_00_1_0010B
+
+        DB 1_1_0_0_1111B
+        DB 0X00
+
+; Fill The Rest Descriptor
+TIMES (GDTR_LIMIT_COUNTS - 3) DQ 0X0000
+```
 
 
 
+1.   将GDT表加载入gdtr寄存器
+
+   ```assembly
+   LGDT [_gdtr_48]
+   ```
+
+
+
+2. 打开A20地址总线
+
+   ```assembly
+           MOV DX, 0X92
+           IN AL, DX
+   
+           OR AL, 00000010B
+           OUT DX, AL
+   ```
+
+ 3. 将Cr0寄存器第一位置为1
+
+    ```assembly
+            MOV EAX, CR0
+            OR EAX, 0X01
+            MOV CR0, EAX
+    ```
+
+    
 
 ## 底层硬件IO操作 
 

@@ -14,7 +14,7 @@ FLOPPY_DISK             =           ./vdisk/Floppy.img
 # Choice of Disk  Path
 DISK_PATH               =           $(HARD_DISK)
 BIN_PATH                =           ./bin/
-LIB_PATH                =           $(BIN_PATH)lib 
+LIB_PATH                =           ./bin/lib/
 BOOT_PATH               =           ./boot/
 CONFIG_PATH             =           ./config/
 KERNEL_PATH             =           ./kernel/
@@ -41,15 +41,20 @@ bootloader.bin :  $(BOOT_PATH)bootloader.asm Makefile
 setup.bin : $(BOOT_PATH)setup.asm Makefile
 		$(nasm) $(BOOT_PATH)setup.asm -o $(BIN_PATH)setup.bin
 
-# kernel
 
-DEPENDENCE_FILE  =    $(KERNEL_PATH)kernel_main.c
+# kernel
+DEPENDENCE_SOURCE_FILE  =    $(KERNEL_PATH)kernel_main.c 
+kernels :   
+		$(nasm) -f elf32 $(BOOT_PATH)head.asm -o $(LIB_PATH)head.o 
+		$(gcc) -m32 -c $(DEPENDENCE_SOURCE_FILE) -o $(LIB_PATH)kernelc.o  
+		$(ld) -m elf_i386 -s $(LIB_PATH)head.o $(LIB_PATH)kernelc.o -o $(LIB_PATH)kernel.o  
+		$(objcopy) -O binary $(LIB_PATH)kernel.o $(BIN_PATH)kernel.bin
 
 # Create All Files
 create : 
 		$(make) bootloader.bin
 		$(make) setup.bin
-
+		$(make) kernels
 
 ############### Write File ################
 
@@ -58,7 +63,8 @@ write :
 		$(dd) if=$(BIN_PATH)bootloader.bin of=$(DISK_PATH) bs=512 count=1 seek=0
 # setup			(第2-5个扇区)
 		$(dd) if=$(BIN_PATH)setup.bin of=$(DISK_PATH) bs=512 count=4 seek=1
-
+# kernel
+		$(dd) if=$(BIN_PATH)kernel.bin of=$(DISK_PATH) bs=512 count=4 seek=5
 
 ############### Run Application ################
 
